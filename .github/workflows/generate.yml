@@ -1,0 +1,48 @@
+name: Generate Medical Articles
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Number of articles to generate'
+        required: false
+        default: '50'
+      category:
+        description: 'Category to generate (leave blank for all)'
+        required: false
+        default: ''
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install @google/generative-ai
+
+      - name: Generate articles
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BATCH_SIZE: ${{ github.event.inputs.batch_size || '50' }}
+          FILTER_CATEGORY: ${{ github.event.inputs.category || '' }}
+        run: node generate-articles.js
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "MedLib Generator"
+          git add -A
+          git diff --staged --quiet || git commit -m "Generated articles — $(date +'%Y-%m-%d %H:%M')"
+          git push
