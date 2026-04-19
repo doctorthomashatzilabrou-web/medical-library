@@ -1,2 +1,333 @@
-<h1>Welcome to the Medical Library</h1>
-<p>This is the GitHub Pages site for the Medical Library repository.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedLib — Clinical Reference Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --border: #1e2328;
+    --accent: #c8f542;
+    --accent2: #3bf0c4;
+    --text: #e8eaed;
+    --muted: #6b7280;
+    --card-hover: #161b22;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,245,66,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,245,66,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+  header { padding: 48px 0 24px; border-bottom: 1px solid var(--border); }
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  h1 span { color: var(--accent); }
+  .tagline {
+    font-size: 14px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 12px;
+  }
+  .search-section { padding: 40px 0 32px; }
+  .search-wrap { position: relative; }
+  .search-wrap::before {
+    content: '⌕';
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  #searchInput {
+    width: 100%;
+    padding: 18px 18px 18px 52px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #searchInput:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,245,66,0.08);
+  }
+  #searchInput::placeholder { color: var(--muted); }
+  .search-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  #resultCount { color: var(--accent2); }
+  .categories {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .cat-pill {
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+  }
+  .cat-pill:hover, .cat-pill.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(200,245,66,0.06);
+  }
+  #articleGrid {
+    display: grid;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .article-card {
+    background: var(--surface);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .article-card:hover { background: var(--card-hover); }
+  .article-card:hover .card-title { color: var(--accent); }
+  .card-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--border);
+    width: 32px;
+    flex-shrink: 0;
+  }
+  .card-body { flex: 1; min-width: 0; }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 400;
+    transition: color 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .card-tag {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent2);
+    padding: 2px 8px;
+    border: 1px solid rgba(59,240,196,0.2);
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .arrow {
+    color: var(--border);
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .article-card:hover .arrow { color: var(--accent); transform: translateX(3px); }
+  .load-more-wrap { text-align: center; padding: 32px 0 64px; }
+  #loadMore {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 10px 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  #loadMore:hover { border-color: var(--accent); color: var(--accent); }
+  .no-results {
+    padding: 48px 24px;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">MedLib // Clinical Reference</div>
+    <h1>Medical<br><span>Knowledge</span><br>Library</h1>
+    <p class="tagline">// 10,000+ physician-reviewed clinical articles</p>
+  </header>
+
+  <div class="search-section">
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Search conditions, drugs, procedures..." autocomplete="off">
+    </div>
+    <div class="search-meta">
+      <span id="resultCount">0 articles</span>
+      <span>client-side search // no tracking</span>
+    </div>
+  </div>
+
+  <div class="categories" id="categoryBar"></div>
+  <div id="articleGrid"><div class="no-results">No articles yet — run the generator workflow first.</div></div>
+  <div class="load-more-wrap">
+    <button id="loadMore" style="display:none">LOAD MORE</button>
+  </div>
+</div>
+
+<script>
+const PER_PAGE = 50;
+let allArticles = [];
+let filtered = [];
+let page = 0;
+let fuse;
+let activeCategory = 'All';
+
+async function init() {
+  try {
+    const res = await fetch('articles.json');
+    allArticles = await res.json();
+    if (!Array.isArray(allArticles)) allArticles = [];
+  } catch(e) {
+    allArticles = [];
+  }
+
+  if (allArticles.length === 0) {
+    document.getElementById('resultCount').textContent = '0 articles — generate some first';
+    return;
+  }
+
+  fuse = new Fuse(allArticles, {
+    keys: ['title', 'category', 'tags', 'summary'],
+    threshold: 0.35
+  });
+
+  const cats = ['All', ...new Set(allArticles.map(a => a.category))].slice(0, 12);
+  const bar = document.getElementById('categoryBar');
+  cats.forEach(cat => {
+    const pill = document.createElement('button');
+    pill.className = 'cat-pill' + (cat === 'All' ? ' active' : '');
+    pill.textContent = cat;
+    pill.onclick = () => {
+      activeCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      applySearch(document.getElementById('searchInput').value);
+    };
+    bar.appendChild(pill);
+  });
+
+  applySearch('');
+}
+
+function applySearch(query) {
+  page = 0;
+  filtered = query.trim() ? fuse.search(query).map(r => r.item) : [...allArticles];
+  if (activeCategory !== 'All') filtered = filtered.filter(a => a.category === activeCategory);
+  renderGrid(true);
+}
+
+function renderGrid(reset) {
+  const grid = document.getElementById('articleGrid');
+  const slice = filtered.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+  if (reset) grid.innerHTML = '';
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="no-results">No articles found.</div>';
+    document.getElementById('loadMore').style.display = 'none';
+    document.getElementById('resultCount').textContent = '0 results';
+    return;
+  }
+
+  document.getElementById('resultCount').textContent = `${filtered.length.toLocaleString()} articles`;
+
+  const start = page * PER_PAGE;
+  slice.forEach((art, i) => {
+    const card = document.createElement('a');
+    card.className = 'article-card';
+    card.href = `articles/${art.slug}.html`;
+    card.innerHTML = `
+      <span class="card-num">${String(start + i + 1).padStart(4,'0')}</span>
+      <div class="card-body">
+        <div class="card-title">${art.title}</div>
+        <div class="card-meta">${art.category} · ${art.readTime || 8} min read</div>
+      </div>
+      <span class="card-tag">${art.category}</span>
+      <span class="arrow">→</span>
+    `;
+    grid.appendChild(card);
+  });
+
+  page++;
+  const hasMore = filtered.length > page * PER_PAGE;
+  const btn = document.getElementById('loadMore');
+  btn.style.display = hasMore ? 'inline-block' : 'none';
+  if (hasMore) btn.textContent = `LOAD MORE — ${filtered.length - page * PER_PAGE} remaining`;
+}
+
+document.getElementById('searchInput').addEventListener('input', e => applySearch(e.target.value));
+document.getElementById('loadMore').addEventListener('click', () => renderGrid(false));
+
+init();
+</script>
+</body>
+</html>
