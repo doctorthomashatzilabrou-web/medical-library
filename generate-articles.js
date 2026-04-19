@@ -141,7 +141,7 @@ console.log(`Generating ${topicsToGenerate.length} articles...`);
 const template = fs.readFileSync('article-template.html', 'utf8');
 if (!fs.existsSync('articles')) fs.mkdirSync('articles');
 
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 async function generateArticle(topic) {
   const prompt = `You are a physician writing a clinical reference article for healthcare professionals.
