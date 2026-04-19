@@ -30,7 +30,7 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm install @google/generative-ai
+        run: npm install @google/generative-ai@latest
 
       - name: Generate articles
         env:
